@@ -81,14 +81,25 @@ module.exports = function () {
 
       var f = null
       if (key === '()') {
-        queue.push(function (r) { f = r(opts) })
+        queue.push(function (r) {
+          f = r(opts)
+        })
       } else {
-        queue.push(function (r) { f = r[key](opts) })
+        queue.push(function (r) {
+          f = r[key](opts)
+        })
       }
-      return function () {
+      return function (context, props) {
         var args = arguments
-        if (f) f.apply(null,args)
-        else queue.push(function (r) { f.apply(null,args) })
+        if (f) {
+          if(key === '()'){
+            f.apply(null,args)
+          }else{
+            return f;
+          }
+        }else{
+          queue.push(function (r) { f.apply(null,args) })
+        }
       }
     }
   }
@@ -105,7 +116,13 @@ module.exports = function () {
       }
       var r = function () {
         var args = arguments
-        if (f) f.apply(null,args)
+        if (f){
+          if(key === '()'){
+            f.apply(null,args)
+          }else{
+            return f;
+          }
+        }
         else queue.push(function (r) { f.apply(null,args) })
       }
       for (var i = 0; i < methods.length; i++) {
