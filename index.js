@@ -3,6 +3,10 @@ module.exports = function () {
   var queue = []
   var def = dfn('()')
   unset()
+  def.queue = queue
+  def.setQueue = function(queueInput){
+    queue = queueInput
+  }
   def.setRegl = function (r) {
     regl = r
     if (!r) return unset()
