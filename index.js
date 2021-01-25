@@ -13,7 +13,7 @@ module.exports = function () {
     for (var i = 0; i < queue.length; i++) {
       queue[i](regl)
     }
-    queue = null
+    queue = []
     def.frame = r.frame
     def.draw = r.draw
     def.poll = r.poll
