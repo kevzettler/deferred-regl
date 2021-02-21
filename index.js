@@ -85,15 +85,11 @@ module.exports = function () {
 
       var f = null
       if (key === '()') {
-        queue.push(function (r) {
-          f = r(opts)
-        })
+        queue.push(function (r) { f = r(opts) })
       } else {
-        queue.push(function (r) {
-          f = r[key](opts)
-        })
+        queue.push(function (r) { f = r[key](opts) })
       }
-      var r = function (context, props) {
+      var r = function () {
         var args = arguments
         if (!falsy(f)) {
           if (key === '()') f.apply(null,args)
@@ -103,6 +99,7 @@ module.exports = function () {
         }
       }
       r.deferred_regl_resource = true;
+
       return r;
     }
   }
