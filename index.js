@@ -93,7 +93,7 @@ module.exports = function () {
           f = r[key](opts)
         })
       }
-      return function (context, props) {
+      var r = function (context, props) {
         var args = arguments
         if (!falsy(f)) {
           if (key === '()') f.apply(null,args)
@@ -102,6 +102,8 @@ module.exports = function () {
           queue.push(function (r) { f.apply(null,args) })
         }
       }
+      r.deferred_regl_resource = true;
+      return r;
     }
   }
   function dfnx (key, methods) {
