@@ -3,13 +3,17 @@ module.exports = function () {
   var queue = []
   var def = dfn('()')
   unset()
+  def.queue = queue
+  def.setQueue = function(queueInput){
+    queue = queueInput
+  }
   def.setRegl = function (r) {
     regl = r
     if (!r) return unset()
     for (var i = 0; i < queue.length; i++) {
       queue[i](regl)
     }
-    queue = null
+    queue = []
     def.frame = r.frame
     def.draw = r.draw
     def.poll = r.poll
@@ -39,7 +43,7 @@ module.exports = function () {
     def.clear = function (opts) { queue.push(function (r) { r.clear(opts) }) }
     def.prop = function (key) {
       return function (context, props) {
-        if (props[key]) {
+        if (!falsy(props[key])) {
           return props[key]
         } else {
           // missing key could be speical case unrolled uniform prop
@@ -59,7 +63,7 @@ module.exports = function () {
     def['this'] = function (key) {
       return function (context, props) { return this[key] }
     }
-    def.buffer = dfn('buffer')
+    def.buffer = dfnx('buffer', ['subdata'])
     def.texture = dfn('texture')
     def.elements = dfn('elements')
     def.framebuffer = dfnx('framebuffer',['resize','use'])
@@ -87,10 +91,10 @@ module.exports = function () {
       }
       return function () {
         var args = arguments
-        if (f) {
-          if(key === '()') f.apply(null,args)
-          else return f;
-        }else{
+        if (!falsy(f)) {
+          if (key === '()') f.apply(null,args)
+          else return f
+        } else {
           queue.push(function (r) { f.apply(null,args) })
         }
       }
@@ -109,21 +113,26 @@ module.exports = function () {
       }
       var r = function () {
         var args = arguments
-        if (f){
-          if(key === '()') f.apply(null,args)
-          else return f;
+        if (!falsy(f)) {
+          if (key === '()') f.apply(null,args)
+          else return f
+        } else {
+          queue.push(function (r) { f.apply(null,args) })
         }
-        else queue.push(function (r) { f.apply(null,args) })
       }
       for (var i = 0; i < methods.length; i++) {
         var m = methods[i]
         r[m] = function () {
           var args = arguments
-          if (f) return f[m].apply(f,args)
+          if (!falsy(f)) return f[m].apply(f,args)
           else queue.push(function () { f[m].apply(f,args) })
         }
       }
       return r
     }
   }
+}
+
+function falsy (x) {
+  return x === null || x === undefined
 }
