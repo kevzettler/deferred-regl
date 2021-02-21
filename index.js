@@ -85,11 +85,15 @@ module.exports = function () {
 
       var f = null
       if (key === '()') {
-        queue.push(function (r) { f = r(opts) })
+        queue.push(function (r) {
+          f = r(opts)
+        })
       } else {
-        queue.push(function (r) { f = r[key](opts) })
+        queue.push(function (r) {
+          f = r[key](opts)
+        })
       }
-      return function () {
+      return function (context, props) {
         var args = arguments
         if (!falsy(f)) {
           if (key === '()') f.apply(null,args)
