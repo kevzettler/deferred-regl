@@ -105,11 +105,20 @@ module.exports = function () {
       if (key === '()' && regl) return regl(opts)
       else if (regl) return regl[key](opts)
 
+      var mutatedOpts = opts;
       var f = null
       if (key === '()') {
-        queue.push(function (r) { f = r(opts) })
+        queue.push(function (r) { f = r(mutatedOpts) })
       } else {
-        queue.push(function (r) { f = r[key](opts) })
+        queue.push(function (r) {
+          var keys = Object.keys(mutatedOpts);
+          for(var i = 0; i < keys.length; i++){
+            if(mutatedOpts[keys[i]].deferred_regl_resource) {
+              mutatedOpts[keys[i]] = mutatedOpts[keys[i]]();
+            }
+          }
+          f = r[key](mutatedOpts)
+        })
       }
       var r = function () {
         var args = arguments
@@ -120,6 +129,8 @@ module.exports = function () {
           queue.push(function (r) { f.apply(null,args) })
         }
       }
+      r.deferred_regl_resource = true;
+
       for (var i = 0; i < methods.length; i++) {
         var m = methods[i]
         r[m] = function () {
