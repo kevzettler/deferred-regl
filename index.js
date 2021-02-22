@@ -36,7 +36,6 @@ module.exports = function () {
   return def
 
   function unset () {
-    regl = null
     if (!queue) queue = []
     def.frame = function (cb) { queue.push(function (r) { r.frame(cb) }) }
     def.draw = function (cb) { queue.push(function (r) { r.draw(cb) }) }
@@ -88,16 +87,7 @@ module.exports = function () {
       if (key === '()') {
         queue.push(function (r) { f = r(opts) })
       } else {
-        queue.push(function (r) {
-          var mutatedOpts = Object.assign({}, opts);
-          var keys = Object.keys(mutatedOpts);
-          for(var i = 0; i < keys.length; i++){
-            if(mutatedOpts[keys[i]].deferred_regl_resource) {
-              mutatedOpts[keys[i]] = mutatedOpts[keys[i]]();
-            }
-          }
-          f = r[key](mutatedOpts)
-        })
+        queue.push(function (r) { f = r[key](opts) })
       }
       var r = function () {
         var args = arguments
@@ -123,14 +113,14 @@ module.exports = function () {
         queue.push(function (r) { f = r(opts) })
       } else {
         queue.push(function (r) {
-          var mutatedOpts = Object.assign({}, opts);
-          var keys = Object.keys(mutatedOpts);
+          var mutatedOpts = {};
+          var keys = Object.keys(opts);
           for(var i = 0; i < keys.length; i++){
-            if(mutatedOpts[keys[i]].deferred_regl_resource) {
-              mutatedOpts[keys[i]] = mutatedOpts[keys[i]]();
+            if(opts[keys[i]].deferred_regl_resource) {
+              mutatedOpts[keys[i]] = opts[keys[i]]();
             }
           }
-          f = r[key](mutatedOpts)
+          f = r[key](Object.assign(opts, mutatedOpts))
         })
       }
       var r = function () {
