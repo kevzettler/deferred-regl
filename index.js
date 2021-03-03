@@ -11,7 +11,11 @@ module.exports = function () {
     regl = r
     if (!r) return unset()
     for (var i = 0; i < queue.length; i++) {
-      queue[i](regl)
+      try{
+        queue[i](regl)
+      }catch(ex){
+        console.error("deferred-regl queue failure!, ", queue[i].key, ex);
+      }
     }
     queue = []
     def.frame = r.frame
@@ -98,6 +102,7 @@ module.exports = function () {
           queue.push(function (r) { f.apply(null,args) })
         }
       }
+      r.key = key
       r.deferred_regl_resource = true;
 
       return r;
@@ -113,14 +118,27 @@ module.exports = function () {
         queue.push(function (r) { f = r(opts) })
       } else {
         queue.push(function (r) {
-          var mutatedOpts = {};
-          var keys = Object.keys(opts);
-          for(var i = 0; i < keys.length; i++){
-            if(opts[keys[i]].deferred_regl_resource) {
-              mutatedOpts[keys[i]] = opts[keys[i]]();
-            }
-          }
-          f = r[key](Object.assign(opts, mutatedOpts))
+          // TODO theres a bug in the Life.tsx examples
+          // When we expand the regl.texture resources underneath
+          // regl.framebuffer({color: regl.texture})
+          // if we mutate the opts argument and expand the child resources
+          // the tear down/cleanup breaks. because the queu then latery trys to
+          // recreate them? maybe need to remove the deferred status??
+          // it boils down to r[key](mutatedOpts) vs r[key](opts)
+
+          /* const dependants = Object.values(opts).filter(o => o.deferred_regl_resource).length;
+           * if(dependants){
+           *   var mutatedOpts = Object.assign({}, opts);
+           *   var keys = Object.keys(mutatedOpts);
+           *   for(var i = 0; i < keys.length; i++){
+           *     if(mutatedOpts[keys[i]].deferred_regl_resource) {
+           *       mutatedOpts[keys[i]] = mutatedOpts[keys[i]]();
+           *     }
+           *   }
+           *   f = r[key](mutatedOpts);
+           * }else{ */
+            f = r[key](opts)
+          //}
         })
       }
       var r = function () {
@@ -135,6 +153,7 @@ module.exports = function () {
           })
         }
       }
+      r.key = key
       r.deferred_regl_resource = true;
 
       for (var i = 0; i < methods.length; i++) {
