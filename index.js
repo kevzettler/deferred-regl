@@ -103,6 +103,8 @@ module.exports = function () {
         }
       }
       r.key = key
+      r.opts = opts
+      r.queueIndex = queue.length - 1;
       r.deferred_regl_resource = true;
 
       return r;
@@ -117,29 +119,7 @@ module.exports = function () {
       if (key === '()') {
         queue.push(function (r) { f = r(opts) })
       } else {
-        queue.push(function (r) {
-          // TODO theres a bug in the Life.tsx examples
-          // When we expand the regl.texture resources underneath
-          // regl.framebuffer({color: regl.texture})
-          // if we mutate the opts argument and expand the child resources
-          // the tear down/cleanup breaks. because the queu then latery trys to
-          // recreate them? maybe need to remove the deferred status??
-          // it boils down to r[key](mutatedOpts) vs r[key](opts)
-
-          /* const dependants = Object.values(opts).filter(o => o.deferred_regl_resource).length;
-           * if(dependants){
-           *   var mutatedOpts = Object.assign({}, opts);
-           *   var keys = Object.keys(mutatedOpts);
-           *   for(var i = 0; i < keys.length; i++){
-           *     if(mutatedOpts[keys[i]].deferred_regl_resource) {
-           *       mutatedOpts[keys[i]] = mutatedOpts[keys[i]]();
-           *     }
-           *   }
-           *   f = r[key](mutatedOpts);
-           * }else{ */
-            f = r[key](opts)
-          //}
-        })
+        queue.push(function (r) { f = r[key](opts) })
       }
       var r = function () {
         var args = arguments
@@ -147,14 +127,14 @@ module.exports = function () {
           if (key === '()') f.apply(null,args)
           else return f
         } else {
-          queue.push(function (r) {
-            if(key === 'framebuffer') debugger;
-            f.apply(null,args)
-          })
+          queue.push(function (r) { f.apply(null,args) })
         }
       }
       r.key = key
+      r.opts = opts
+      r.queueIndex = queue.length - 1;
       r.deferred_regl_resource = true;
+
 
       for (var i = 0; i < methods.length; i++) {
         var m = methods[i]
