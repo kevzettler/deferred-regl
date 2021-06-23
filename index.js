@@ -103,6 +103,8 @@ module.exports = function () {
         }
       }
       r.key = key
+      r.opts = opts
+      r.queueIndex = queue.length - 1;
       r.deferred_regl_resource = true;
 
       return r;
@@ -148,12 +150,13 @@ module.exports = function () {
           else return f
         } else {
           queue.push(function (r) {
-            if(key === 'framebuffer') debugger;
             f.apply(null,args)
           })
         }
       }
       r.key = key
+      r.opts = opts
+      r.queueIndex = queue.length - 1;
       r.deferred_regl_resource = true;
 
       for (var i = 0; i < methods.length; i++) {
